@@ -1,0 +1,23 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Cascading Castles · Game flow</title>
+<style>*{box-sizing:border-box}body{margin:0;height:100dvh;display:flex;flex-direction:column;background:#10251e;color:#ecdfc3;font-family:Georgia,serif}header{display:flex;justify-content:space-between;align-items:center;padding:18px 25px;border-bottom:1px solid #c9b27d44;gap:15px}small{font:9px Arial;letter-spacing:1.4px;color:#cbb27f}h1{font-size:24px;font-weight:400;margin:6px 0 0}a{color:#dfc58e;font:12px Arial}main{flex:1;min-height:0;padding:12px 18px;display:flex;align-items:center;justify-content:center}img{display:block;width:100%;height:100%;object-fit:contain}footer{padding:8px 22px 18px;text-align:center}nav{display:flex;justify-content:center;align-items:center;gap:12px}select,button{font:13px Georgia;color:#ecdfc3;background:#243e2e;border:1px solid #c9b27d66;padding:10px 14px;border-radius:5px}button{cursor:pointer}p{font:11px/1.5 Arial;color:#b5c1a7;margin:12px 0 0}button:focus-visible,select:focus-visible,a:focus-visible{outline:2px solid #e4c58c;outline-offset:3px}@media(max-width:700px){h1{font-size:18px}header{padding:12px}main{padding:6px}select{max-width:60vw;font-size:11px}button{font-size:11px;padding:9px}footer{padding:8px 10px}p{font-size:10px}}</style></head>
+<body><header><div><small>CASCADING CASTLES · PLAYABLE GAME</small><h1>The woodland journey</h1></div><a href="../">Play the game ↗</a></header><main><img id="screen" src="01-setup.png" alt="Player setup on the Market and Orchard board"></main><footer><nav><button id="previous" aria-label="Previous screen">←</button><select id="step" aria-label="Game flow screen"></select><button id="next" aria-label="Next screen">→</button></nav><p id="caption"></p></footer>
+<script>
+const screens=[
+ ['01-setup','Gather the houses','Choose people or bots, a journey, and shared spells.'],
+ ['02-table','At the table','The board stays present. The active house and its hand are the main controls.'],
+ ['03-card-and-targets','Play a card','Commit one card, then choose from its legal traveller or turret moves.'],
+ ['04-confirm-move','Choose a level','Inspect the roof and turret levels. Confirm the destination before moving.'],
+ ['05-capture','A potion earned','The moved turret covers the destination travellers and fills one empty potion.'],
+ ['06-six-unit-roof','Six on one roof','Six fixed positions; inspect individual animals without exposing buried floors.'],
+ ['07-home-ledger','Home in the Keep','Completed travellers have gold seals and remain grouped by house.'],
+ ['08-dice','Roll and choose','Each reroll replaces the last result. Accept it before choosing a piece.'],
+ ['09-spell-targets','Cast a spell','The spellbook opens above the board and offers legal public targets.'],
+ ['10-rescue-choice','Unbar the Door','A paid search reveals eligible choices; choose one traveller to rescue.'],
+ ['11-private-handoff','Pass the turn','Optional private handoff conceals the next human’s hand until they reveal it.'],
+ ['12-ten-high','Ten levels','The camera fits the entire stack. Every movable level remains selectable.'],
+ ['13-victory','The gathering ends','Finish the final round, compare qualified houses, and show the result.']
+];let current=0;const select=document.querySelector('#step');screens.forEach((s,i)=>{const option=document.createElement('option');option.value=i;option.textContent=`${String(i+1).padStart(2,'0')} · ${s[1]}`;select.append(option)});
+function show(index){current=(index+screens.length)%screens.length;select.value=current;const s=screens[current];document.querySelector('#screen').src=s[0]+'.png';document.querySelector('#screen').alt=s[1]+' — actual implemented game screen';document.querySelector('#caption').textContent=s[2]+' Screenshots from the playable implementation.';history.replaceState(null,'','?step='+(current+1))}
+select.addEventListener('change',()=>show(Number(select.value)));document.querySelector('#previous').addEventListener('click',()=>show(current-1));document.querySelector('#next').addEventListener('click',()=>show(current+1));document.addEventListener('keydown',e=>{if(e.target===select)return;if(e.key==='ArrowRight')show(current+1);if(e.key==='ArrowLeft')show(current-1)});show(Math.max(0,Math.min(12,(Number(new URLSearchParams(location.search).get('step'))||1)-1)));
+</script></body></html>

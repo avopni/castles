@@ -1,0 +1,27 @@
+/* The clearing itself is the move control; indices stay in accessible labels. */
+.game-table>.game-board .space-button{width:6.2%;height:5.9%;min-width:24px;min-height:20px;transform:translate(-50%,-50%);border:2px solid transparent;border-radius:50%;background:transparent;color:#f3dfac;box-shadow:none;padding:0;animation:none}
+.game-table>.game-board .space-button:hover:not(.target-space):not(.destination-space){border-color:#e6ca8566;background:#e4c4780a}
+.game-table>.game-board .space-button.target-space{border-color:#f1d18b;background:#e1b85716;box-shadow:0 0 0 2px #e5c57555,0 0 14px #dbbc6655}
+.game-table>.game-board .space-button.destination-space{border:3px solid #a2f9cf;background:#70eeb334;box-shadow:0 0 0 3px #8aefba66,0 0 22px #95f7c299;animation:destination-pulse 1.4s ease-in-out infinite}
+.game-table>.game-board .home-counter{left:calc(100% + 4px);top:50%;transform:translateY(-50%)}
+.game-table>.game-board .badge-left .home-counter{left:auto;right:calc(100% + 4px)}
+.game-table>.game-board .stack-count{left:auto;right:-5px;top:auto;bottom:-8px;pointer-events:none}
+@keyframes destination-pulse{50%{box-shadow:0 0 0 5px #8aefba88,0 0 28px #95f7c2bb;background:#70eeb34a}}
+/* Size cards from the actual available panel area instead of the viewport. */
+.hand-body{container-type:size}.hand-body>.hand-cards{gap:6px}.hand-body .play-card{width:min(calc((100cqw - 12px)/3),calc(100cqh * 2/3));height:auto;max-height:100%;aspect-ratio:2/3}
+.hand-tray .hand-actions{height:40px;min-height:40px}
+.hand-tray[data-review=true] .hand-owner,.hand-tray[data-review=true] .hand-toggle{display:none}
+.hand-tray[data-review=true] .hand-body{width:100%;height:100%;flex:1}
+.hand-tray .hand-body>.move-review{height:100%;min-height:0;display:grid;grid-template-columns:1fr 1fr;grid-template-rows:auto minmax(0,1fr);gap:12px;align-items:stretch;justify-content:stretch;padding:4px}
+.hand-tray .hand-body>.move-review small{grid-column:1/-1;font:13px Arial;color:#e6d19a;margin:0;padding:8px;text-align:center;letter-spacing:1px}
+.hand-tray .hand-body>.move-review button{font:clamp(20px,2vw,30px) Georgia;border-radius:8px;width:100%;height:100%;padding:12px}
+.hand-tray .hand-body>.move-review button:not(.primary){background:#324b39;border-color:#bca56e;color:#f0dfb5}
+.hand-tray .hand-body>.move-review .review-art-button{position:relative;padding:0;overflow:hidden;border:1px solid #c9af76;isolation:isolate}
+.review-art-button img{display:block;width:100%;height:100%;object-fit:cover;object-position:center 35%;transition:transform .2s ease}
+.review-art-button span{position:absolute;inset:auto 0 0;padding:24px 6px 10px;background:linear-gradient(transparent,#10281eea 60%);color:#fff0c7;font:clamp(18px,2vw,26px) Georgia;text-shadow:0 1px 3px #081811}
+.review-art-button:hover img{transform:scale(1.025)}
+.review-art-button:focus-visible{outline:2px solid #fff0af;outline-offset:3px}
+@media(prefers-reduced-motion:reduce){.review-art-button img{transition:none}.review-art-button:hover img{transform:none}}
+.hand-tray.collapsed,.hand-tray.collapsed:not(:has(.hand-actions button)){height:43px}
+@media(max-width:760px){.hand-body .play-card{width:min(calc((100cqw - 8px)/3),calc(100cqh * 2/3))}.hand-body>.hand-cards{gap:4px}.hand-tray .hand-body>.move-review{gap:8px;padding:0}.hand-tray .hand-body>.move-review small{font-size:10px;padding:4px}.hand-tray .hand-body>.move-review button{font-size:20px;padding:8px}.dock-units .roof-residents small{font-size:7px}}
+@media(prefers-reduced-motion:reduce){.game-table>.game-board .space-button.destination-space{animation:none}}
