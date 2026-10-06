@@ -88,6 +88,14 @@ export function GameBoard({state,before,selected,targets=[],destinationSpace,red
     const painting=mesh(new THREE.PlaneGeometry(BOARD_WIDTH,BOARD_DEPTH),artMat,scene,0,-.012,0);painting.rotation.x=-Math.PI/2;painting.castShadow=false;
     const shadowMat=new THREE.ShadowMaterial({opacity:.23});allMaterials.push(shadowMat);
     mesh(new THREE.PlaneGeometry(BOARD_WIDTH,BOARD_DEPTH),shadowMat,scene,0,.001,0).rotation.x=-Math.PI/2;
+    // Painted clearings also need hit areas when no piece occupies them.
+    if(detailSpace===undefined){
+      const hitMaterial=new THREE.MeshBasicMaterial({visible:false});allMaterials.push(hitMaterial);
+      for(let space=0;space<state.board.length;space++){
+        const p=location(space,.004),hit=mesh(new THREE.CircleGeometry(.9,32),hitMaterial,scene,p.x,p.y,p.z);
+        hit.rotation.x=-Math.PI/2;hit.castShadow=hit.receiveShadow=false;hit.userData.pick=`space-${space}`;
+      }
+    }
     const objects=new Map<string,THREE.Group>();
     painting.visible=detailSpace===undefined;
     const unitBaseBottom=UNIT_BASE_CENTER_Y-UNIT_BASE_HEIGHT/2;

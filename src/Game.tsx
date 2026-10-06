@@ -51,6 +51,11 @@ function selectedCardDescription(pending:State['pending']){
   };
   return [pending.card.tower&&describe('Castle',pending.card.tower),pending.card.wizard&&describe('Unit',pending.card.wizard)].filter(Boolean).join(' / ');
 }
+function spaceSelection(state:State,space:number,moves:Move[],tier=state.board[space].towers[0]){
+  const unit=moves.find(m=>m.kind==='wizard'&&wizardLocation(state,m.target)?.space===space)?.target;
+  if(state.phase==='move'&&!state.pending?.refresh&&!state.pending?.card?.tower)return unit??tier??'';
+  return tier??unit??'';
+}
 function Drawer({title,onClose,children,left=false}:{title:string;onClose:()=>void;children:ReactNode;left?:boolean}){
   const ref=useRef<HTMLElement>(null);
   useEffect(()=>{const previous=document.activeElement as HTMLElement|null;ref.current?.querySelector<HTMLElement>('button')?.focus();return()=>{if(previous?.isConnected)previous.focus()}},[]);
@@ -95,8 +100,8 @@ export default function Game(){
       setRecord(r);setState(next);setBefore(duration||reviewable?current.state:null);setBusy(duration>0);setSelected('');setOptionSpace(null);setChosenSpell(null);setError('');
       if(action.type!=='givePotion'&&action.type!=='exchange')setPanel(null);
       if(!automatic&&next.phase==='move'&&(action.type==='play'||action.type==='accept'||action.type==='refresh')){
-        const first=legalMoves(next)[0];
-        if(first){setInspected(next.towers[first.target]?towerLocation(next,first.target).space:wizardLocation(next,first.target)!.space);setPanel('inspect');setHandCollapsed(false);}
+        const nextMoves=legalMoves(next),first=nextMoves[0];
+        if(first){const space=next.towers[first.target]?towerLocation(next,first.target).space:wizardLocation(next,first.target)!.space;setInspected(space);setOptionSpace(space);setSelected(spaceSelection(next,space,nextMoves));setPanel('inspect');setHandCollapsed(false);}
       }
       const completed=next.events.find(e=>e.kind==='enter'),capture=next.events.find(e=>e.kind==='capture'),miss=next.events.find(e=>e.kind==='miss');
       setNotice(completed?`${completed.ids.length} traveller${completed.ids.length>1?'s':''} home`:capture?next.players[capture.value!].full>current.state.players[capture.value!].full?'A potion filled':'Travellers covered':miss?(miss.text??'The search found no traveller'):'');
@@ -129,12 +134,13 @@ export default function Game(){
     const s=latest.current.state;if(!s||latest.current.busy)return;
     const space=id.startsWith('space-')?Number(id.slice(6)):s.towers[id]?towerLocation(s,id).space:wizardLocation(s,id)?.space;
     if(space===undefined)return;
-    if(id.startsWith('space-')&&!s.board[space].towers.length&&!s.board[space].ground.length)return;
     if(chosenMove&&!locked&&space===destination){dispatch({type:'move',move:chosenMove});return;}
+    if(id.startsWith('space-')&&!s.board[space].towers.length&&!s.board[space].ground.length)return;
     if(id==='keep'){setInspected(space);setOptionSpace(space);setSelected('');setPanel('home');return;}
     if(id.startsWith('space-')&&s.board[space].towers.at(-1)==='keep'){setInspected(space);setOptionSpace(space);setSelected('');setPanel('home');return;}
-    setInspected(space);setOptionSpace(space);setSelected(id.startsWith('space-')&&s.phase==='move'?'':id.startsWith('space-')?s.board[space].towers.at(-1)??'':id);setPanel('inspect');setHandCollapsed(false);
-  },[chosenMove,locked,destination,dispatch]);
+    setInspected(space);setOptionSpace(space);setSelected(s.wizards[id]?id:spaceSelection(s,space,moves));setPanel('inspect');setHandCollapsed(false);
+  },[chosenMove,locked,destination,dispatch,moves]);
+  const selectPiece=(id:string)=>{if(!state||locked)return;setOptionSpace(inspected);setSelected(state.towers[id]?spaceSelection(state,inspected,moves,id):id)};
   const begin=(config:Config)=>{try{
     setPrefs(v=>({...v,privateHands:false}));install(newRecord(createGame(config)));setHandoff(false);
   }catch(e){setError((e as Error).message)}};
@@ -163,7 +169,7 @@ export default function Game(){
         <button className="hand-toggle" aria-label={handCollapsed?'Show hand':'Hide hand'} onClick={()=>setHandCollapsed(v=>!v)}>{handCollapsed?'Show hand':'−'}</button>
         <div className="hand-owner">{p?.bot?'BOT':shared?'SHARED HAND':p?.name}<small>{busy?'Travelling…':paused?'Paused':state.phase==='reaction'?`${state.reaction!.stage} movement`:state.phase==='move'?panel==='inspect'?selectedCardDescription(state.pending):chosenMove?'Click the highlighted clearing':optionSpace===null?'Choose a clearing':'Choose a tower or unit':state.phase==='roll'?'Choose your roll':state.phase==='after'?'A spell, or continue':state.phase==='gameover'?'Journey complete':''}</small></div>
         <div className="hand-body">
-          {reviewAction?<div className="move-review" role="group" aria-label="Review the completed move"><small>Review your move</small><button className="primary review-art-button" onClick={confirmMove}><img src={`${import.meta.env.BASE_URL}art/actions/${reviewArtPrefix}confirm-v1.png`} alt=""/><span>Confirm</span></button><button className="review-art-button" onClick={undoMove}><img src={`${import.meta.env.BASE_URL}art/actions/${reviewArtPrefix}undo-v1.png`} alt=""/><span>Undo</span></button></div>:panel==='inspect'?<SpaceInspector state={state} space={inspected} boardId={prefs.boardId} selected={selected} moves={moves.filter(m=>positionOf(m.target)===inspected)} locked={locked} actor={actor} focusedOwner={focusedOwner} peek={peek&&!handoff} towerLabel={id=>turretLabel(state,id)} onSelect={id=>{setOptionSpace(inspected);setSelected(id)}} onClose={()=>{setPanel(null);setSelected('');setOptionSpace(null)}}/>:<div className="hand-cards">{hand(state).map(c=><MovementCard key={c.id} card={c} hidden={!!p?.bot||handoff||!shared&&actor!==state.current} disabled={locked||state.phase!=='choose'} onClick={()=>dispatch({type:'play',card:c.id})}/>)}{state.pending?.card&&<MovementCard card={state.pending.card} committed disabled/>}</div>}
+          {reviewAction?<div className="move-review" role="group" aria-label="Review the completed move"><small>Review your move</small><button className="primary review-art-button" onClick={confirmMove}><img src={`${import.meta.env.BASE_URL}art/actions/${reviewArtPrefix}confirm-v1.png`} alt=""/><span>Confirm</span></button><button className="review-art-button" onClick={undoMove}><img src={`${import.meta.env.BASE_URL}art/actions/${reviewArtPrefix}undo-v1.png`} alt=""/><span>Undo</span></button></div>:panel==='inspect'?<SpaceInspector state={state} space={inspected} boardId={prefs.boardId} selected={selected} moves={moves.filter(m=>positionOf(m.target)===inspected)} locked={locked} actor={actor} focusedOwner={focusedOwner} peek={peek&&!handoff} towerLabel={id=>turretLabel(state,id)} onSelect={selectPiece} onClose={()=>{setPanel(null);setSelected('');setOptionSpace(null)}}/>:<div className="hand-cards">{hand(state).map(c=><MovementCard key={c.id} card={c} hidden={!!p?.bot||handoff||!shared&&actor!==state.current} disabled={locked||state.phase!=='choose'} onClick={()=>dispatch({type:'play',card:c.id})}/>)}{state.pending?.card&&<MovementCard card={state.pending.card} committed disabled/>}</div>}
         </div>
           {!reviewAction&&<div className="hand-actions">
           {panel===null&&state.phase==='choose'&&!shared&&state.actions===0&&!state.pending&&<button disabled={locked} onClick={()=>dispatch({type:'refresh'})}>Refresh hand<small>Turret +1 · whole hand</small></button>}
